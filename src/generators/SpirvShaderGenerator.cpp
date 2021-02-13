@@ -54,11 +54,23 @@ void CSpirvShaderGenerator::Generate()
 	m_boolTypeId = AllocateId();
 	m_floatTypeId = AllocateId();
 	m_float4TypeId = AllocateId();
+
 	m_uintTypeId = AllocateId();
+	// m_uint24TypeId = AllocateId();
+	m_uint16TypeId = AllocateId();
+	m_uint8TypeId = AllocateId();
+	m_uint4iTypeId = AllocateId();
+
 	m_uint4TypeId = AllocateId();
 	m_matrix44TypeId = AllocateId();
 	m_uintArrayTypeId = AllocateId();
+
 	m_intTypeId = AllocateId();
+	// m_int24TypeId = AllocateId();
+	m_int16TypeId = AllocateId();
+	m_int8TypeId = AllocateId();
+	m_int4iTypeId = AllocateId();
+
 	m_int2TypeId = AllocateId();
 	m_int3TypeId = AllocateId();
 	m_int4TypeId = AllocateId();
@@ -82,6 +94,11 @@ void CSpirvShaderGenerator::Generate()
 
 		m_uniformInt4PointerTypeId = AllocateId();
 		m_uniformUintPtrId = AllocateId();
+
+		m_uniformUint24PtrId = AllocateId();
+		m_uniformUint16PtrId = AllocateId();
+		m_uniformUint4iPtrId = AllocateId();
+		m_uniformUint8PtrId = AllocateId();
 	}
 
 	if(m_hasTextures)
@@ -179,6 +196,7 @@ void CSpirvShaderGenerator::Generate()
 	//Names
 	//WriteOp(spv::OpSource, spv::SourceLanguageUnknown, 100);
 	//WriteOp(spv::OpName, mainFunctionId, "main");
+	WriteOp(spv::OpDecorate, m_uint8ArrayTypeId, spv::DecorationArrayStride, 1); //Make this optional
 
 	WriteVariablePointerNames();
 	WriteUniformStructNames();
@@ -202,7 +220,18 @@ void CSpirvShaderGenerator::Generate()
 	DecorateInputPointerIds();
 	DecorateOutputPointerIds();
 
-	WriteOp(spv::OpDecorate, m_uintArrayTypeId, spv::DecorationArrayStride, 4); //Make this optional
+	// if(m_shaderType == SHADER_TYPE_COMPUTE)
+	// {
+	// 	WriteOp(spv::OpDecorate, m_uintArrayTypeId, spv::DecorationArrayStride, 1); //Make this optional
+	// }
+	// else
+	{
+		WriteOp(spv::OpDecorate, m_uintArrayTypeId, spv::DecorationArrayStride, 4); //Make this optional
+	}
+	// WriteOp(spv::OpDecorate, m_uint24ArrayTypeId, spv::DecorationArrayStride, 3); //Make this optional
+	// WriteOp(spv::OpDecorate, m_uint16ArrayTypeId, spv::DecorationArrayStride, 2); //Make this optional
+	// WriteOp(spv::OpDecorate, m_int8TypeId, spv::DecorationArrayStride, 1); //Make this optional
+	// WriteOp(spv::OpDecorate, m_uniformUint8PtrId, spv::DecorationArrayStride, 1); //Make this optional
 
 	//Type declarations
 	WriteOp(spv::OpTypeVoid, voidTypeId);
@@ -212,11 +241,30 @@ void CSpirvShaderGenerator::Generate()
 	WriteOp(spv::OpTypeVector, m_float4TypeId, m_floatTypeId, 4);
 	WriteOp(spv::OpTypeMatrix, m_matrix44TypeId, m_float4TypeId, 4);
 	WriteOp(spv::OpTypeInt, m_intTypeId, 32, 1);
+	// WriteOp(spv::OpTypeInt, m_int24TypeId, 24, 1);
+	WriteOp(spv::OpTypeInt, m_int16TypeId, 16, 1);
+	WriteOp(spv::OpTypeInt, m_int8TypeId, 8, 1);
+	WriteOp(spv::OpTypeInt, m_int4iTypeId, 4, 1);
 	WriteOp(spv::OpTypeVector, m_int2TypeId, m_intTypeId, 2);
 	WriteOp(spv::OpTypeVector, m_int4TypeId, m_intTypeId, 4);
 	WriteOp(spv::OpTypeInt, m_uintTypeId, 32, 0);
+	// WriteOp(spv::OpTypeInt, m_uint24TypeId, 24, 0);
+	WriteOp(spv::OpTypeInt, m_uint16TypeId, 16, 0);
+	WriteOp(spv::OpTypeInt, m_uint8TypeId, 8, 0);
+	WriteOp(spv::OpTypeInt, m_uint4iTypeId, 4, 0);
 	WriteOp(spv::OpTypeVector, m_uint4TypeId, m_uintTypeId, 4);
 	WriteOp(spv::OpTypeRuntimeArray, m_uintArrayTypeId, m_uintTypeId); //Make this optional
+
+	// WriteOp(spv::OpTypeRuntimeArray, m_uint24ArrayTypeId, m_uint24TypeId);
+	// WriteOp(spv::OpTypeRuntimeArray, m_uint16ArrayTypeId, m_uint16TypeId);
+	WriteOp(spv::OpTypeRuntimeArray, m_uint8ArrayTypeId, m_uint8TypeId);
+	// WriteOp(spv::OpTypeRuntimeArray, m_uniformUint8PtrId, m_uint8TypeId);
+	// WriteOp(spv::OpTypeStruct, m_uint8ArrayTypeId, m_uniformUint8PtrId);
+
+	// WriteOp(spv::OpTypePointer, m_uniformUint24PtrId, spv::StorageClassPrivate, m_uint24TypeId);
+	// WriteOp(spv::OpTypePointer, m_uniformUint16PtrId, spv::StorageClassGeneric, m_uint16TypeId);
+	// WriteOp(spv::OpTypePointer, m_uniformUint8PtrId, spv::StorageClassStorageBuffer, m_uint8TypeId);
+
 	WriteOp(spv::OpTypePointer, m_inputFloat4PointerTypeId, spv::StorageClassInput, m_float4TypeId);
 	WriteOp(spv::OpTypePointer, m_inputUint4PointerTypeId, spv::StorageClassInput, m_uint4TypeId);
 	WriteOp(spv::OpTypePointer, m_outputFloat4PointerTypeId, spv::StorageClassOutput, m_float4TypeId);
@@ -466,6 +514,18 @@ void CSpirvShaderGenerator::Generate()
 				break;
 			case CShaderBuilder::STATEMENT_OP_STORE:
 				Store(src1Ref, src2Ref, src3Ref);
+				break;
+			case CShaderBuilder::STATEMENT_OP_STORE_24:
+				Store24(src1Ref, src2Ref, src3Ref);
+				break;
+			case CShaderBuilder::STATEMENT_OP_STORE_16:
+				Store16(src1Ref, src2Ref, src3Ref);
+				break;
+			case CShaderBuilder::STATEMENT_OP_STORE_8:
+				Store8(src1Ref, src2Ref, src3Ref);
+				break;
+			case CShaderBuilder::STATEMENT_OP_STORE_4:
+				Store4(src1Ref, src2Ref, src3Ref);
 				break;
 			case CShaderBuilder::STATEMENT_OP_ATOMICAND:
 				AtomicImageOp(spv::OpAtomicAnd, dstRef, src1Ref, src2Ref, src3Ref);
@@ -1013,6 +1073,10 @@ void CSpirvShaderGenerator::AllocateUniformStructsIds()
 			structInfo.components.push_back(m_uintArrayTypeId);
 			structInfo.isBufferBlock = true;
 			break;
+		case CShaderBuilder::SYMBOL_TYPE_ARRAYUINT8:
+			structInfo.components.push_back(m_uint8ArrayTypeId);
+			structInfo.isBufferBlock = true;
+			break;
 		default:
 			assert(false);
 			break;
@@ -1070,6 +1134,7 @@ void CSpirvShaderGenerator::DecorateUniformStructIds()
 			structInfo.currentOffset += 64;
 			break;
 		case CShaderBuilder::SYMBOL_TYPE_ARRAYUINT:
+		case CShaderBuilder::SYMBOL_TYPE_ARRAYUINT8:
 			//This needs to be the last element of a struct
 			break;
 		default:
@@ -1124,6 +1189,7 @@ void CSpirvShaderGenerator::DeclareUniformStructIds()
 
 	WriteOp(spv::OpTypePointer, m_uniformInt4PointerTypeId, spv::StorageClassUniform, m_int4TypeId);
 	WriteOp(spv::OpTypePointer, m_uniformUintPtrId, spv::StorageClassUniform, m_uintTypeId);
+	WriteOp(spv::OpTypePointer, m_uniformUint8PtrId, spv::StorageClassUniform, m_uint8TypeId);
 }
 
 void CSpirvShaderGenerator::AllocateTextureIds()
@@ -1839,6 +1905,145 @@ void CSpirvShaderGenerator::Store(const CShaderBuilder::SYMBOLREF& src1Ref, cons
 
 		WriteOp(spv::OpCompositeExtract, m_intTypeId, indexId, src2Id, 0);
 		WriteOp(spv::OpCompositeExtract, m_uintTypeId, valueId, src3Id, 0);
+		WriteOp(spv::OpAccessChain, m_uniformUintPtrId, src1Id, bufferAccessParams.first, bufferAccessParams.second, indexId);
+		WriteOp(spv::OpStore, src1Id, valueId);
+	}
+	else
+	{
+		assert(src1Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_IMAGE2DUINT);
+		auto src1Id = LoadFromSymbol(src1Ref);
+		auto src2Id = LoadFromSymbol(src2Ref);
+		auto src3Id = LoadFromSymbol(src3Ref);
+		WriteOp(spv::OpImageWrite, src1Id, src2Id, src3Id);
+	}
+}
+
+void CSpirvShaderGenerator::Store24(const CShaderBuilder::SYMBOLREF& src1Ref, const CShaderBuilder::SYMBOLREF& src2Ref, const CShaderBuilder::SYMBOLREF& src3Ref)
+{
+	assert(src2Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_INT4);
+	assert(src3Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_UINT4);
+	if(src1Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_ARRAYUINT)
+	{
+		auto bufferAccessParams = GetStructAccessChainParams(src1Ref);
+		auto src1Id = AllocateId();
+		auto src2Id = LoadFromSymbol(src2Ref);
+		auto src3Id = LoadFromSymbol(src3Ref);
+		auto valueId = AllocateId();
+		auto indexId = AllocateId();
+
+		// WriteOp(spv::OpCompositeExtract, m_int24TypeId, indexId, src2Id, 0);
+		// WriteOp(spv::OpCompositeExtract, m_uint24TypeId, valueId, src3Id, 0);
+		// WriteOp(spv::OpAccessChain, m_uniformUintPtrId, src1Id, bufferAccessParams.first, bufferAccessParams.second, indexId);
+		// WriteOp(spv::OpStore, src1Id, valueId);
+
+		
+		WriteOp(spv::OpCompositeExtract, m_intTypeId, indexId, src2Id, 0);
+		WriteOp(spv::OpCompositeExtract, m_uintTypeId, valueId, src3Id, 0);
+		WriteOp(spv::OpAccessChain, m_uniformUintPtrId, src1Id, bufferAccessParams.first, bufferAccessParams.second, indexId);
+		WriteOp(spv::OpStore, src1Id, valueId);
+	}
+	else
+	{
+		assert(src1Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_IMAGE2DUINT);
+		auto src1Id = LoadFromSymbol(src1Ref);
+		auto src2Id = LoadFromSymbol(src2Ref);
+		auto src3Id = LoadFromSymbol(src3Ref);
+		WriteOp(spv::OpImageWrite, src1Id, src2Id, src3Id);
+	}
+}
+
+void CSpirvShaderGenerator::Store16(const CShaderBuilder::SYMBOLREF& src1Ref, const CShaderBuilder::SYMBOLREF& src2Ref, const CShaderBuilder::SYMBOLREF& src3Ref)
+{
+	assert(src2Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_INT4);
+	assert(src3Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_UINT4);
+	if(src1Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_ARRAYUINT)
+	{
+		auto bufferAccessParams = GetStructAccessChainParams(src1Ref);
+		auto src1Id = AllocateId();
+		auto src2Id = LoadFromSymbol(src2Ref);
+		auto src3Id = LoadFromSymbol(src3Ref);
+		auto valueId = AllocateId();
+		auto indexId = AllocateId();
+
+
+		// auto ptrId = AllocateId();
+		// WriteOp(spv::OpTypePointer, ptrId, spv::StorageClassFunction, m_uint16TypeId);
+
+		WriteOp(spv::OpCompositeExtract, m_int16TypeId, indexId, src2Id, 1);
+		WriteOp(spv::OpCompositeExtract, m_uint16TypeId, valueId, src3Id, 0);
+		WriteOp(spv::OpAccessChain, m_uniformUint16PtrId, src1Id, bufferAccessParams.first, bufferAccessParams.second, indexId);
+		WriteOp(spv::OpStore, src1Id, valueId);
+	}
+	else
+	{
+		assert(src1Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_IMAGE2DUINT);
+		auto src1Id = LoadFromSymbol(src1Ref);
+		auto src2Id = LoadFromSymbol(src2Ref);
+		auto src3Id = LoadFromSymbol(src3Ref);
+		WriteOp(spv::OpImageWrite, src1Id, src2Id, src3Id);
+	}
+}
+
+void CSpirvShaderGenerator::Store8(const CShaderBuilder::SYMBOLREF& src1Ref, const CShaderBuilder::SYMBOLREF& src2Ref, const CShaderBuilder::SYMBOLREF& src3Ref)
+{
+	assert(src2Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_INT4);
+	assert(src3Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_UINT4);
+	if(src1Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_ARRAYUINT8)
+	{
+		auto bufferAccessParams = GetStructAccessChainParams(src1Ref);
+		auto src1Id = AllocateId();
+		auto src2Id = LoadFromSymbol(src2Ref);
+		auto src3Id = LoadFromSymbol(src3Ref);
+		auto valueId = AllocateId();
+		auto indexId = AllocateId();
+
+		// auto constId = AllocateId();
+		// WriteOp(spv::OpConstant, m_intTypeId, constId, 3);
+
+		WriteOp(spv::OpCompositeExtract, m_intTypeId, indexId, src2Id, 0);
+		WriteOp(spv::OpCompositeExtract, m_uint8TypeId, valueId, src3Id, 0);
+		WriteOp(spv::OpAccessChain, m_uniformUint8PtrId, src1Id, bufferAccessParams.first, bufferAccessParams.second, indexId);
+		// auto pointerId = AllocateId();
+		// WriteOp(spv::OpAccessChain, m_uint8ArrayTypeId, pointerId, bufferAccessParams.first, bufferAccessParams.second);
+
+		// WriteOp(spv::OpIMul, m_intTypeId, indexId, indexId, indexId);
+		// WriteOp(spv::OpIAdd, m_intTypeId, indexId, indexId, constId);
+
+		// WriteOp(spv::OpAccessChain, m_uint8ArrayTypeId, src1Id, pointerId, indexId);
+
+		// auto pointer2Id = AllocateId();
+		// WriteOp(spv::OpConstant, m_intTypeId, pointer2Id, 0);
+
+		// WriteOp(spv::OpPtrAccessChain, m_uniformUint8PtrId, pointerId, src1Id, bufferAccessParams.second);
+
+		WriteOp(spv::OpStore, src1Id, valueId);
+	}
+	else
+	{
+		assert(src1Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_IMAGE2DUINT);
+		auto src1Id = LoadFromSymbol(src1Ref);
+		auto src2Id = LoadFromSymbol(src2Ref);
+		auto src3Id = LoadFromSymbol(src3Ref);
+		WriteOp(spv::OpImageWrite, src1Id, src2Id, src3Id);
+	}
+}
+
+
+void CSpirvShaderGenerator::Store4(const CShaderBuilder::SYMBOLREF& src1Ref, const CShaderBuilder::SYMBOLREF& src2Ref, const CShaderBuilder::SYMBOLREF& src3Ref)
+{
+	assert(src2Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_INT4);
+	assert(src3Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_UINT4);
+	if(src1Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_ARRAYUINT)
+	{
+		auto bufferAccessParams = GetStructAccessChainParams(src1Ref);
+		auto src1Id = AllocateId();
+		auto src2Id = LoadFromSymbol(src2Ref);
+		auto src3Id = LoadFromSymbol(src3Ref);
+		auto valueId = AllocateId();
+		auto indexId = AllocateId();
+
+		WriteOp(spv::OpCompositeExtract, m_int4iTypeId, indexId, src2Id, 0);
+		WriteOp(spv::OpCompositeExtract, m_uint4iTypeId, valueId, src3Id, 0);
 		WriteOp(spv::OpAccessChain, m_uniformUintPtrId, src1Id, bufferAccessParams.first, bufferAccessParams.second, indexId);
 		WriteOp(spv::OpStore, src1Id, valueId);
 	}

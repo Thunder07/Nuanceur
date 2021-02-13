@@ -162,6 +162,10 @@ namespace Nuanceur
 			const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&);
 		void Load(const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&);
 		void Store(const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&);
+		void Store24(const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&);
+		void Store16(const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&);
+		void Store8(const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&);
+		void Store4(const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&, const CShaderBuilder::SYMBOLREF&);
 
 		enum
 		{
@@ -190,12 +194,24 @@ namespace Nuanceur
 
 		uint32 m_intTypeId = EMPTY_ID;
 		uint32 m_uintTypeId = EMPTY_ID;
+		uint32 m_int24TypeId = EMPTY_ID;
+		uint32 m_uint24TypeId = EMPTY_ID;
+		uint32 m_int16TypeId = EMPTY_ID;
+		uint32 m_uint16TypeId = EMPTY_ID;
+		uint32 m_int8TypeId = EMPTY_ID;
+		uint32 m_uint8TypeId = EMPTY_ID;
+		uint32 m_int4iTypeId = EMPTY_ID;
+		uint32 m_uint4iTypeId = EMPTY_ID;
+
 		uint32 m_int2TypeId = EMPTY_ID;
 		uint32 m_int3TypeId = EMPTY_ID;
 		uint32 m_int4TypeId = EMPTY_ID;
 		uint32 m_uint4TypeId = EMPTY_ID;
 
 		uint32 m_uintArrayTypeId = EMPTY_ID;
+		uint32 m_uint8ArrayTypeId = EMPTY_ID;
+		uint32 m_uint16ArrayTypeId = EMPTY_ID;
+		uint32 m_uint24ArrayTypeId = EMPTY_ID;
 
 		uint32 m_inputFloat4PointerTypeId = EMPTY_ID;
 		uint32 m_outputFloat4PointerTypeId = EMPTY_ID;
@@ -214,7 +230,10 @@ namespace Nuanceur
 
 		uint32 m_uniformInt4PointerTypeId = EMPTY_ID;
 		uint32 m_uniformUintPtrId = EMPTY_ID;
-
+		uint32 m_uniformUint24PtrId = EMPTY_ID;
+		uint32 m_uniformUint16PtrId = EMPTY_ID;
+		uint32 m_uniformUint8PtrId = EMPTY_ID;
+		uint32 m_uniformUint4iPtrId = EMPTY_ID;
 		//Sampled Image
 		uint32 m_sampledImage2DTypeId = EMPTY_ID;
 		uint32 m_sampledImageSamplerTypeId = EMPTY_ID;
