@@ -481,14 +481,8 @@ void Nuanceur::Store(const CArrayUintValue& buffer, const CIntValue& index, cons
 	switch(size)
 	{
 		case 32:
-		default:
 			owner->InsertStatement(
 				CShaderBuilder::STATEMENT(CShaderBuilder::STATEMENT_OP_STORE, CShaderBuilder::SYMBOLREF(), buffer, index, value)
-			);
-			break;
-		case 24:
-			owner->InsertStatement(
-				CShaderBuilder::STATEMENT(CShaderBuilder::STATEMENT_OP_STORE_24, CShaderBuilder::SYMBOLREF(), buffer, index, value)
 			);
 			break;
 		case 16:
@@ -501,12 +495,8 @@ void Nuanceur::Store(const CArrayUintValue& buffer, const CIntValue& index, cons
 				CShaderBuilder::STATEMENT(CShaderBuilder::STATEMENT_OP_STORE_8, CShaderBuilder::SYMBOLREF(), buffer, index, value)
 			);
 			break;
-		case 4:
-			owner->InsertStatement(
-				CShaderBuilder::STATEMENT(CShaderBuilder::STATEMENT_OP_STORE_4, CShaderBuilder::SYMBOLREF(), buffer, index, value)
-			);
-			break;
-
+		default:
+			throw "Unsupported Bit Size";
 	}
 }
 
