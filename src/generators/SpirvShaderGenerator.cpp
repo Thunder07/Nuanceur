@@ -144,6 +144,7 @@ void CSpirvShaderGenerator::Generate()
 
 	WriteOp(spv::OpExtension, "SPV_KHR_storage_buffer_storage_class");
 	WriteOp(spv::OpExtension, "SPV_KHR_8bit_storage");
+	WriteOp(spv::OpExtension, "SPV_KHR_16bit_storage");
 
 
 	WriteOp(spv::OpExtInstImport, m_glslStd450ExtInst, "GLSL.std.450");
@@ -1975,7 +1976,7 @@ void CSpirvShaderGenerator::Store16(const CShaderBuilder::SYMBOLREF& src1Ref, co
 		auto value16Id = AllocateId();
 		auto indexId = AllocateId();
 
-		WriteOp(spv::OpCompositeExtract, m_int16TypeId, indexId, src2Id, 1);
+		WriteOp(spv::OpCompositeExtract, m_intTypeId, indexId, src2Id, 0);
 		WriteOp(spv::OpCompositeExtract, m_uint16TypeId, valueId, src3Id, 0);
 		WriteOp(spv::OpAccessChain, m_uniformUint8PtrId, src1Id, bufferAccessParams.first, bufferAccessParams.second, indexId);
 		WriteOp(spv::OpUConvert, m_uint16TypeId, value16Id, valueId);
@@ -2038,11 +2039,11 @@ void CSpirvShaderGenerator::Store4(const CShaderBuilder::SYMBOLREF& src1Ref, con
 		auto indexId = AllocateId();
 		auto value4bitId = AllocateId();
 
-		WriteOp(spv::OpCompositeExtract, m_int4iTypeId, indexId, src2Id, 0);
+		WriteOp(spv::OpCompositeExtract, m_intTypeId, indexId, src2Id, 0);
 		WriteOp(spv::OpCompositeExtract, m_uint4iTypeId, valueId, src3Id, 0);
 		WriteOp(spv::OpAccessChain, m_uniformUint8PtrId, src1Id, bufferAccessParams.first, bufferAccessParams.second, indexId);
 		WriteOp(spv::OpUConvert, m_uint4iTypeId, value4bitId, valueId);
-		WriteOp(spv::OpStore, src1Id, valueId);
+		WriteOp(spv::OpStore, src1Id, value4bitId);
 	}
 	else
 	{
