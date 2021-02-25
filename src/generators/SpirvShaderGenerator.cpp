@@ -493,6 +493,12 @@ void CSpirvShaderGenerator::Generate()
 			case CShaderBuilder::STATEMENT_OP_STORE:
 				Store(src1Ref, src2Ref, src3Ref);
 				break;
+			case CShaderBuilder::STATEMENT_OP_STORE_16:
+				Store16(src1Ref, src2Ref, src3Ref);
+				break;
+			case CShaderBuilder::STATEMENT_OP_STORE_8:
+				Store8(src1Ref, src2Ref, src3Ref);
+				break;
 			case CShaderBuilder::STATEMENT_OP_ATOMICAND:
 				AtomicImageOp(spv::OpAtomicAnd, dstRef, src1Ref, src2Ref, src3Ref);
 				break;
@@ -1882,4 +1888,48 @@ void CSpirvShaderGenerator::Store(const CShaderBuilder::SYMBOLREF& src1Ref, cons
 		auto src3Id = LoadFromSymbol(src3Ref);
 		WriteOp(spv::OpImageWrite, src1Id, src2Id, src3Id);
 	}
+}
+
+void CSpirvShaderGenerator::Store16(const CShaderBuilder::SYMBOLREF& src1Ref, const CShaderBuilder::SYMBOLREF& src2Ref, const CShaderBuilder::SYMBOLREF& src3Ref)
+{
+	assert(src2Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_INT4);
+	assert(src3Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_UINT4);
+	assert(src1Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_ARRAYUINT8);
+
+	auto bufferAccessParams = GetStructAccessChainParams(src1Ref);
+	auto src1Id = AllocateId();
+	auto src2Id = LoadFromSymbol(src2Ref);
+	auto src3Id = LoadFromSymbol(src3Ref);
+	auto valueId = AllocateId();
+	auto value16Id = AllocateId();
+	auto indexId = AllocateId();
+
+	WriteOp(spv::OpCompositeExtract, m_intTypeId, indexId, src2Id, 0);
+	WriteOp(spv::OpCompositeExtract, m_uint16TypeId, valueId, src3Id, 0);
+	WriteOp(spv::OpAccessChain, m_uniformUint8PtrId, src1Id, bufferAccessParams.first, bufferAccessParams.second, indexId);
+	WriteOp(spv::OpUConvert, m_uint16TypeId, value16Id, valueId);
+	WriteOp(spv::OpStore, src1Id, value16Id);
+}
+
+void CSpirvShaderGenerator::Store8(const CShaderBuilder::SYMBOLREF& src1Ref, const CShaderBuilder::SYMBOLREF& src2Ref, const CShaderBuilder::SYMBOLREF& src3Ref)
+{
+	assert(src2Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_INT4);
+	assert(src3Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_UINT4);
+	assert(src1Ref.symbol.type == CShaderBuilder::SYMBOL_TYPE_ARRAYUINT8);
+
+	auto bufferAccessParams = GetStructAccessChainParams(src1Ref);
+	auto src1Id = AllocateId();
+	auto src2Id = LoadFromSymbol(src2Ref);
+	auto src3Id = LoadFromSymbol(src3Ref);
+	auto valueId = AllocateId();
+	auto value8bitId = AllocateId();
+	auto indexId = AllocateId();
+
+	WriteOp(spv::OpCompositeExtract, m_intTypeId, indexId, src2Id, 0);
+	WriteOp(spv::OpCompositeExtract, m_uint8TypeId, valueId, src3Id, 0);
+	WriteOp(spv::OpAccessChain, m_uniformUint8PtrId, src1Id, bufferAccessParams.first, bufferAccessParams.second, indexId);
+
+	WriteOp(spv::OpUConvert, m_uint8TypeId, value8bitId, valueId);
+
+	WriteOp(spv::OpStore, src1Id, value8bitId);
 }

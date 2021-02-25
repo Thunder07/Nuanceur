@@ -467,12 +467,29 @@ CUintRvalue Nuanceur::Load(const CArrayUintValue& buffer, const CIntValue& index
 	return temp;
 }
 
-void Nuanceur::Store(const CArrayUintValue& buffer, const CIntValue& index, const CUintValue& value)
+void Nuanceur::Store(const CArrayUintValue& buffer, const CIntValue& index, const CUintValue& value, int size)
 {
 	auto owner = GetCommonOwner(buffer.symbol, index.symbol);
-	owner->InsertStatement(
-		CShaderBuilder::STATEMENT(CShaderBuilder::STATEMENT_OP_STORE, CShaderBuilder::SYMBOLREF(), buffer, index, value)
-	);
+	switch(size)
+	{
+		case 32:
+			owner->InsertStatement(
+				CShaderBuilder::STATEMENT(CShaderBuilder::STATEMENT_OP_STORE, CShaderBuilder::SYMBOLREF(), buffer, index, value)
+			);
+			break;
+		case 16:
+			owner->InsertStatement(
+				CShaderBuilder::STATEMENT(CShaderBuilder::STATEMENT_OP_STORE_16, CShaderBuilder::SYMBOLREF(), buffer, index, value)
+			);
+			break;
+		case 8:
+			owner->InsertStatement(
+				CShaderBuilder::STATEMENT(CShaderBuilder::STATEMENT_OP_STORE_8, CShaderBuilder::SYMBOLREF(), buffer, index, value)
+			);
+			break;
+		default:
+			throw "Unsupported Bit Size";
+	}
 }
 
 CUintRvalue Nuanceur::AtomicAnd(const CArrayUintValue& buffer, const CIntValue& index, const CUintValue& value)
