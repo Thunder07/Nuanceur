@@ -1039,6 +1039,10 @@ void CSpirvShaderGenerator::AllocateUniformStructsIds()
 			structInfo.components.push_back(m_uintArrayTypeId);
 			structInfo.isBufferBlock = true;
 			break;
+		case CShaderBuilder::SYMBOL_TYPE_ARRAYUINT8:
+			structInfo.components.push_back(m_uint8ArrayTypeId);
+			structInfo.isBufferBlock = true;
+			break;
 		default:
 			assert(false);
 			break;
@@ -1096,6 +1100,7 @@ void CSpirvShaderGenerator::DecorateUniformStructIds()
 			structInfo.currentOffset += 64;
 			break;
 		case CShaderBuilder::SYMBOL_TYPE_ARRAYUINT:
+		case CShaderBuilder::SYMBOL_TYPE_ARRAYUINT8:
 			//This needs to be the last element of a struct
 			break;
 		default:
