@@ -48,6 +48,12 @@ void CSpirvShaderGenerator::Generate()
 	bool hasInvocationInterlock = std::count_if(m_shaderBuilder.GetStatements().begin(), m_shaderBuilder.GetStatements().end(),
 		[] (const CShaderBuilder::STATEMENT& statement) { return statement.op == CShaderBuilder::STATEMENT_OP_INVOCATION_INTERLOCK_BEGIN; }) != 0;
 
+	bool has8BitInt = std::count_if(m_shaderBuilder.GetStatements().begin(), m_shaderBuilder.GetStatements().end(),
+		[] (const CShaderBuilder::STATEMENT& statement) { return statement.op == CShaderBuilder::STATEMENT_OP_INVOCATION_INTERLOCK_BEGIN; }) != 0;
+
+	bool has16BitInt = std::count_if(m_shaderBuilder.GetStatements().begin(), m_shaderBuilder.GetStatements().end(),
+		[] (const CShaderBuilder::STATEMENT& statement) { return statement.op == CShaderBuilder::STATEMENT_OP_INVOCATION_INTERLOCK_BEGIN; }) != 0;
+
 	auto voidTypeId = AllocateId();
 	auto mainFunctionTypeId = AllocateId();
 	m_glslStd450ExtInst = AllocateId();
@@ -114,25 +120,37 @@ void CSpirvShaderGenerator::Generate()
 	auto mainFunctionId = AllocateId();
 	auto mainFunctionLabelId = AllocateId();
 
-	WriteOp(spv::OpCapability, spv::CapabilityShader);
-	WriteOp(spv::OpCapability, spv::CapabilityInt8);
-	WriteOp(spv::OpCapability, spv::CapabilityStorageBuffer8BitAccess);
-	WriteOp(spv::OpCapability, spv::CapabilityUniformAndStorageBuffer8BitAccess);
-	WriteOp(spv::OpCapability, spv::CapabilityStoragePushConstant8);
+	if(has8BitInt)
+	{
+		WriteOp(spv::OpCapability, spv::CapabilityShader);
+		WriteOp(spv::OpCapability, spv::CapabilityInt8);
+		WriteOp(spv::OpCapability, spv::CapabilityStorageBuffer8BitAccess);
+		WriteOp(spv::OpCapability, spv::CapabilityUniformAndStorageBuffer8BitAccess);
+		WriteOp(spv::OpCapability, spv::CapabilityStoragePushConstant8);
+	}
 
-	WriteOp(spv::OpCapability, spv::CapabilityInt16);
-	WriteOp(spv::OpCapability, spv::CapabilityStorageBuffer16BitAccess);
-	WriteOp(spv::OpCapability, spv::CapabilityUniformAndStorageBuffer16BitAccess);
-	WriteOp(spv::OpCapability, spv::CapabilityStoragePushConstant16);
+	if(has16BitInt)
+	{
+		WriteOp(spv::OpCapability, spv::CapabilityInt16);
+		WriteOp(spv::OpCapability, spv::CapabilityStorageBuffer16BitAccess);
+		WriteOp(spv::OpCapability, spv::CapabilityUniformAndStorageBuffer16BitAccess);
+		WriteOp(spv::OpCapability, spv::CapabilityStoragePushConstant16);
+	}
 
 	if(hasInvocationInterlock)
 	{
 		WriteOp(spv::OpCapability, spv::CapabilityFragmentShaderPixelInterlockEXT);
 		WriteOp(spv::OpExtension, "SPV_EXT_fragment_shader_interlock");
 	}
-	WriteOp(spv::OpExtension, "SPV_KHR_storage_buffer_storage_class");
-	WriteOp(spv::OpExtension, "SPV_KHR_8bit_storage");
-	WriteOp(spv::OpExtension, "SPV_KHR_16bit_storage");
+	if(has8BitInt || has8BitInt)
+	{
+		// note: is this needed?
+		WriteOp(spv::OpExtension, "SPV_KHR_storage_buffer_storage_class");
+		if(has8BitInt)
+			WriteOp(spv::OpExtension, "SPV_KHR_8bit_storage");
+		if(has16BitInt)
+			WriteOp(spv::OpExtension, "SPV_KHR_16bit_storage");
+	}
 	WriteOp(spv::OpExtInstImport, m_glslStd450ExtInst, "GLSL.std.450");
 	WriteOp(spv::OpMemoryModel, spv::AddressingModelLogical, spv::MemoryModelGLSL450);
 
@@ -554,6 +572,44 @@ void CSpirvShaderGenerator::Generate()
 						break;
 					case CShaderBuilder::SYMBOL_TYPE_INT4:
 						WriteOp(spv::OpBitcast, m_uint4TypeId, resultId, src1Id);
+						break;
+					default:
+						assert(false);
+						break;
+					}
+					StoreToSymbol(dstRef, resultId);
+				}
+				break;
+			case CShaderBuilder::STATEMENT_OP_TOUINT8:
+				{
+					auto src1Id = LoadFromSymbol(src1Ref);
+					auto resultId = AllocateId();
+					switch(src1Ref.symbol.type)
+					{
+					case CShaderBuilder::SYMBOL_TYPE_FLOAT4:
+						WriteOp(spv::OpConvertFToU, m_uint8TypeId, resultId, src1Id);
+						break;
+					case CShaderBuilder::SYMBOL_TYPE_UINT4:
+					    WriteOp(spv::OpUConvert, m_uint8TypeId, resultId, src1Id);
+						break;
+					default:
+						assert(false);
+						break;
+					}
+					StoreToSymbol(dstRef, resultId);
+				}
+				break;
+			case CShaderBuilder::STATEMENT_OP_TOUINT16:
+				{
+					auto src1Id = LoadFromSymbol(src1Ref);
+					auto resultId = AllocateId();
+					switch(src1Ref.symbol.type)
+					{
+					case CShaderBuilder::SYMBOL_TYPE_FLOAT4:
+						WriteOp(spv::OpConvertFToU, m_uint16TypeId, resultId, src1Id);
+						break;
+					case CShaderBuilder::SYMBOL_TYPE_UINT4:
+					    WriteOp(spv::OpUConvert, m_uint16TypeId, resultId, src1Id);
 						break;
 					default:
 						assert(false);

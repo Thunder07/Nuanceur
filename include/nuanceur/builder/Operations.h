@@ -4,6 +4,8 @@
 #include "ShaderBuilder.h"
 
 #include "ArrayUintValue.h"
+#include "ArrayUint8Value.h"
+#include "ArrayUint16Value.h"
 #include "BoolValue.h"
 #include "FloatValue.h"
 #include "Float2Value.h"
@@ -16,6 +18,8 @@
 #include "Matrix44Value.h"
 #include "Texture2DValue.h"
 #include "UintValue.h"
+#include "Uint16Value.h"
+#include "Uint8Value.h"
 #include "Uint3Value.h"
 #include "Uint4Value.h"
 
@@ -130,7 +134,9 @@ namespace Nuanceur
 	CUintRvalue AtomicOr(const CImageUint2DValue& image, const CInt2Value& coord, const CUintValue&);
 
 	CUintRvalue Load(const CArrayUintValue& buffer, const CIntValue& index);
-	void Store(const CArrayUintValue& buffer, const CIntValue& index, const CUintValue&, int = 32);
+	void Store(const CArrayUintValue& buffer, const CIntValue& index, const CUintValue&);
+	void Store(const CArrayUint8Value& buffer, const CIntValue& index, const CUint16Value&);
+	void Store(const CArrayUint8Value& buffer, const CIntValue& index, const CUint8Value&);
 
 	CUintRvalue AtomicAnd(const CArrayUintValue& image, const CIntValue& index, const CUintValue&);
 	CUintRvalue AtomicOr(const CArrayUintValue& image, const CIntValue& index, const CUintValue&);
